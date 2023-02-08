@@ -24,6 +24,8 @@
  ****************************************************************************/
 
 #include "HelloWorldScene.h"
+#include "EffectSprite/LightEffect.h"
+#include "EffectSprite/EffectSprite.h"
 
 USING_NS_AX;
 
@@ -78,43 +80,47 @@ bool HelloWorld::init()
     /////////////////////////////
     // 3. add your codes below...
 
-    // add a label shows "Hello World"
-    // create and initialize a label
+    _screenH = visibleSize.height;
+    _screenW = visibleSize.width;
+    _effect = LightEffect::create();
+    _effect->retain();
 
-    auto label = Label::createWithTTF("Hello World", "fonts/Marker Felt.ttf", 24);
-    if (label == nullptr)
+    _lightPos = Vec3(_screenW-200, _screenH-200, 100);
+    _effect->setLightPos(_lightPos);
+    _effect->setLightCutoffRadius(1000);
+    _effect->setBrightness(2.0);
+
+    initBackground();
+    
+    auto spritecache = SpriteFrameCache::getInstance();
+    spritecache->addSpriteFramesWithFile("spritesheet.plist");
+
+    Vector<SpriteFrame*> animFrames;
+    char str[100];
+    for(int i = 1; i <= 8; i++)
     {
-        problemLoading("'fonts/Marker Felt.ttf'");
+        snprintf(str, sizeof(str), "character/%02d.png", i);
+        animFrames.pushBack(spritecache->getSpriteFrameByName(str));
     }
-    else
-    {
-        // position the label on the center of the screen
-        label->setPosition(
-            Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height - label->getContentSize().height));
+    
+    auto sprite = EffectSprite::createWithSpriteFrame(animFrames.front());
+    
+    Animation *animation = Animation::createWithSpriteFrames(animFrames, 1.0f/8);
+    sprite->runAction(RepeatForever::create(Animate::create(animation)));
+    sprite->setPosition(_screenW / 2.0, _screenH / 2.0 - 75.0);
+    sprite->setEffect(_effect, "spritesheet_n.png");
+    
+    addChild(sprite);
 
-        // add the label as a child to this layer
-        this->addChild(label, 1);
-    }
-
-    // add "HelloWorld" splash screen"
-    auto sprite = Sprite::create("HelloWorld.png"sv);
-    if (sprite == nullptr)
-    {
-        problemLoading("'HelloWorld.png'");
-    }
-    else
-    {
-        // position the sprite on the center of the screen
-        sprite->setPosition(Vec2(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
-
-        // add the sprite as a child to this layer
-        this->addChild(sprite, 0);
-        auto drawNode = DrawNode::create();
-        drawNode->setPosition(Vec2(0, 0));
-        addChild(drawNode);
-
-        drawNode->drawRect(safeArea.origin, safeArea.origin + safeArea.size, Color4F::BLUE);
-    }
+    _lightSprite = Sprite::create("lightbulb.png");
+    _lightSprite->setPosition(_lightPos.x, _lightPos.y);
+    this->addChild(_lightSprite);
+    
+    auto listerner = EventListenerTouchAllAtOnce::create();
+    listerner->onTouchesBegan = AX_CALLBACK_2(HelloWorld::handleTouches, this);
+    listerner->onTouchesMoved = AX_CALLBACK_2(HelloWorld::handleTouches, this);
+    listerner->onTouchesEnded = AX_CALLBACK_2(HelloWorld::handleTouches, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listerner, this);
 
     // scheduleUpdate() is required to ensure update(float) is called on every loop
     scheduleUpdate();
@@ -182,4 +188,55 @@ void HelloWorld::menuCloseCallback(Ref* sender)
 
     // EventCustom customEndEvent("game_scene_close_event");
     //_eventDispatcher->dispatchEvent(&customEndEvent);
+}
+
+
+void HelloWorld::handleTouches(const std::vector<Touch *> &touches, Event *)
+{
+    for (auto &touch: touches)
+    {
+        Point pos = touch->getLocation();
+        _lightSprite->setPosition(pos);
+        _lightPos.set(pos.x, pos.y, _lightPos.z);
+        _effect->setLightPos(_lightPos);
+    }
+}
+
+
+void HelloWorld::initBackground()
+{
+    addBackgroundTile("res/background_01.png", 0, 100);
+    addBackgroundTile("res/background_01.png", 1920, 100);
+    addBackgroundTile("res/foreground_01.png", 0, 200, "res/foreground_01_n.png");
+    addBackgroundTile("res/foreground_02.png", 1920, 200, "res/foreground_02_n.png");
+}
+
+
+EffectSprite *HelloWorld::addBackgroundTile(const std::string &spriteFile,
+                                            float offsetX,
+                                            float speed,
+                                            const std::string &normalsFile)
+{
+    auto background = EffectSprite::create(spriteFile);
+    if (!normalsFile.empty())
+    {
+        background->setEffect(_effect, normalsFile);
+    }
+    else
+    {
+        background->setColor(_effect->getAmbientLightColor());
+    }
+
+    float offsetY = (_screenH - background->getContentSize().height) / 2.0f;
+
+    background->setAnchorPoint(Vec2(0,0));
+    addChild(background);
+    
+    auto a1 = MoveTo::create(0, Vec2(offsetX, offsetY));
+    auto a2 = MoveTo::create((_screenW + offsetX) / speed, Vec2(-_screenW, offsetY));
+    auto a3 = MoveTo::create(0, Vec2(_screenW, offsetY));
+    auto a4 = MoveTo::create((_screenW - offsetX) / speed, Vec2(offsetX, offsetY));
+    background->runAction(RepeatForever::create(Sequence::create(a1, a2, a3, a4, nullptr)));
+    
+    return background;
 }

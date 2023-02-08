@@ -1,6 +1,5 @@
 /****************************************************************************
  Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
- Copyright (c) 2021 Bytedance Inc.
 
  https://axmolengine.github.io/
 
@@ -23,48 +22,43 @@
  THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef __HELLOWORLD_SCENE_H__
-#define __HELLOWORLD_SCENE_H__
+/*
+ * based on axmol/tests/cpp-tests/Classes/ShaderTest/ShaderTest2.cpp
+ * extended by CodeAndWeb GmbH https://www.codeandweb.com
+ */
+
+#ifndef _EFFECT_H_
+#define _EFFECT_H_
 
 #include "axmol.h"
 
-class LightEffect;
-class EffectSprite;
-
-class HelloWorld : public ax::Scene
+//
+// Effect
+//
+class Effect : public ax::Ref
 {
-    enum class ExampleGameState
-    {
-        init = 0,
-        update,
-        pause,
-        end,
-        menu1,
-        menu2,
-    };
-    
 public:
-    bool init() override;
-    void update(float delta) override;
+    ax::backend::ProgramState* getProgramState() const { return _programState; }
 
-    // a selector callback
-    void menuCloseCallback(Ref* sender);
-
-private:
-    ExampleGameState _gameState = ExampleGameState::init;
+protected:
+    bool initProgramState(std::string_view fragmentFilename);
+    Effect();
+    virtual ~Effect();
+    ax::backend::ProgramState* _programState = nullptr;
+#if (AX_TARGET_PLATFORM == AX_PLATFORM_ANDROID)
+    std::string _fragSource;
+    ax::EventListenerCustom* _backgroundListener;
+#endif
     
-    ax::Vec3 _lightPos;
-    LightEffect *_effect;
-    ax::Sprite *_lightSprite;
-    float _screenW, _screenH;
-
-    void initBackground();
-    EffectSprite *addBackgroundTile(const std::string &spriteFile,
-                                    float offsetX,
-                                    float speed,
-                                    const std::string &normalsFile = std::string());
-    void handleTouches(const std::vector<ax::Touch *> &touches, ax::Event *unused);
-
+    template <typename T>
+    void setUniform(std::string uniform, T value);
 };
 
-#endif  // __HELLOWORLD_SCENE_H__
+template<typename T>
+void Effect::setUniform(std::string uniformName, T value)
+{
+    auto uniformLocation = _programState->getUniformLocation(uniformName);
+    _programState->setUniform(uniformLocation, &value, sizeof(value));
+}
+
+#endif
