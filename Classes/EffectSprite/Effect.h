@@ -38,27 +38,27 @@
 class Effect : public ax::Ref
 {
 public:
-    ax::backend::ProgramState* getProgramState() const { return _programState; }
+    ax::backend::ProgramState *newProgramState() const;
 
 protected:
-    bool initProgramState(std::string_view fragmentFilename);
+    bool initProgram(std::string_view fragmentFilename);
     Effect();
     virtual ~Effect();
-    ax::backend::ProgramState* _programState = nullptr;
+    ax::backend::Program *_program = nullptr;
 #if (AX_TARGET_PLATFORM == AX_PLATFORM_ANDROID)
     std::string _fragSource;
     ax::EventListenerCustom* _backgroundListener;
 #endif
     
     template <typename T>
-    void setUniform(std::string uniform, T value);
+    void setUniform(ax::backend::ProgramState *programState, std::string_view uniform, T value);
 };
 
 template<typename T>
-void Effect::setUniform(std::string uniformName, T value)
+void Effect::setUniform(ax::backend::ProgramState *programState, std::string_view uniformName, T value)
 {
-    auto uniformLocation = _programState->getUniformLocation(uniformName);
-    _programState->setUniform(uniformLocation, &value, sizeof(value));
+    auto uniformLocation = programState->getUniformLocation(uniformName);
+    programState->setUniform(uniformLocation, &value, sizeof(value));
 }
 
 #endif

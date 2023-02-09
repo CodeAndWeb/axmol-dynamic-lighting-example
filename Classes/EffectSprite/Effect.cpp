@@ -33,7 +33,7 @@
 USING_NS_AX;
 
 
-bool Effect::initProgramState(std::string_view fragmentFilename)
+bool Effect::initProgram(std::string_view fragmentFilename)
 {
     auto fileUtiles       = FileUtils::getInstance();
     auto fragmentFullPath = fileUtiles->fullPathForFilename(fragmentFilename);
@@ -42,18 +42,19 @@ bool Effect::initProgramState(std::string_view fragmentFilename)
 #if (AX_TARGET_PLATFORM == AX_PLATFORM_ANDROID)
     _fragSource = fragSource;
 #endif
-    auto program      = ProgramManager::newProgram(positionTextureColor_vert, fragSource, VertexLayoutHelper::setupSprite);
-    auto programState = new backend::ProgramState(program);
-    AX_SAFE_RELEASE(_programState);
-    AX_SAFE_RELEASE(program);
-    _programState = programState;
+    _program = ProgramManager::newProgram(positionTextureColor_vert, fragSource, VertexLayoutHelper::setupSprite);
 
-    return _programState != nullptr;
+    return _program != nullptr;
+}
+
+
+ax::backend::ProgramState *Effect::newProgramState() const
+{
+    return new backend::ProgramState(_program);
 }
 
 
 Effect::Effect()
-: _programState(nullptr)
 {
 #if (AX_TARGET_PLATFORM == AX_PLATFORM_ANDROID)
     _backgroundListener = EventListenerCustom::create(EVENT_RENDERER_RECREATED,
@@ -73,7 +74,7 @@ Effect::Effect()
 
 Effect::~Effect()
 {
-    AX_SAFE_RELEASE_NULL(_programState);
+    AX_SAFE_RELEASE_NULL(_program);
 #if (AX_TARGET_PLATFORM == AX_PLATFORM_ANDROID)
     Director::getInstance()->getEventDispatcher()->removeEventListener(_backgroundListener);
 #endif

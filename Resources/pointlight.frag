@@ -2,8 +2,10 @@
 precision highp float;
 #endif
 
-varying vec2 v_texCoord;
+uniform sampler2D u_tex0;
 uniform sampler2D u_normals;
+varying vec2 v_texCoord;
+
 uniform vec3  u_lightPos;
 uniform vec2  u_contentSize;
 uniform vec3  u_lightColor;
@@ -20,7 +22,7 @@ uniform float u_halfRadius;
 
 void main(void)
 {
-    vec4 texColor=texture2D(CC_Texture0, v_texCoord);
+    vec4 texColor=texture2D(u_tex0, v_texCoord);
     vec3 normal=texture2D(u_normals, v_texCoord).rgb;
 	normal=normal*2.0-1.0;
 

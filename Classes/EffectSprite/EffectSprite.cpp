@@ -72,7 +72,7 @@ void EffectSprite::setEffect(LightEffect *effect, const std::string &normalMapFi
         _effect = effect;
         AX_SAFE_RETAIN(_effect);
 
-        setProgramState(_effect->getProgramState());
+        setProgramState(_effect->newProgramState());
     }
 }
 
@@ -84,8 +84,6 @@ void EffectSprite::draw(Renderer *renderer, const Mat4 &transform, uint32_t flag
         _effect->prepareForRender(this, _normalmap);
     }
     Sprite::draw(renderer, transform, flags);
-    renderer->render();
-    
 }
 
 EffectSprite::~EffectSprite()
