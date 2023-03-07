@@ -82,13 +82,16 @@ bool HelloWorld::init()
     
     _screenH = visibleSize.height;
     _screenW = visibleSize.width;
-    _effect = LightEffect::create();
-    _effect->retain();
-    
-    _lightPos = Vec3(_screenW-200, _screenH-200, 100);
-    _effect->setLightPos(_lightPos);
-    _effect->setLightCutoffRadius(1000);
-    _effect->setBrightness(2.0);
+
+    _lightPos = Vec3(_screenW-700, _screenH-300, 200);
+
+    _light = LightEffect::create();
+    _light->setLightPos(_lightPos);
+    _light->setLightCutoffRadius(1000);
+    _light->setBrightness(2.0);
+    _light->setLightColor(ax::Color3B(255,160, 60));
+    _light->setAmbientLightColor(ax::Color3B(96,96,80));
+    _light->retain();
     
     initBackground();
     
@@ -108,13 +111,12 @@ bool HelloWorld::init()
     Animation *animation = Animation::createWithSpriteFrames(animFrames, 1.0f/8);
     sprite->runAction(RepeatForever::create(Animate::create(animation)));
     sprite->setPosition(_screenW / 2.0, _screenH / 2.0 - 75.0);
-    sprite->setEffect(_effect, "spritesheet_n.png");
-
+    sprite->setEffect(_light, "spritesheet_n.png");
     addChild(sprite);
 
     _lightSprite = Sprite::create("lightbulb.png");
     _lightSprite->setPosition(_lightPos.x, _lightPos.y);
-    this->addChild(_lightSprite);
+    addChild(_lightSprite);
 
     auto listerner = EventListenerTouchAllAtOnce::create();
     listerner->onTouchesMoved = AX_CALLBACK_2(HelloWorld::handleTouches, this);
@@ -196,7 +198,7 @@ void HelloWorld::handleTouches(const std::vector<Touch *> &touches, Event *)
         Point pos = touch->getLocation();
         _lightSprite->setPosition(pos);
         _lightPos.set(pos.x, pos.y, _lightPos.z);
-        _effect->setLightPos(_lightPos);
+        _light->setLightPos(_lightPos);
     }
 }
 
@@ -218,11 +220,11 @@ EffectSprite *HelloWorld::addBackgroundTile(const std::string &spriteFile,
     auto background = EffectSprite::create(spriteFile);
     if (!normalsFile.empty())
     {
-        background->setEffect(_effect, normalsFile);
+        background->setEffect(_light, normalsFile);
     }
     else
     {
-        background->setColor(_effect->getAmbientLightColor());
+        background->setColor(_light->getAmbientLightColor());
     }
 
     float offsetY = (_screenH - background->getContentSize().height) / 2.0f;

@@ -20,7 +20,7 @@ bool LightEffect::init()
     if (initProgram("pointlight.frag"))
     {
         setLightColor(Color3B::WHITE);
-        setAmbientLightColor(Color3B(127,127,127));
+        setAmbientLightColor(Color3B(63,63,63));
         setLightCutoffRadius(500.0f);
         setLightHalfRadius(0.5f);
         return true;

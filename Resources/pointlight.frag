@@ -28,7 +28,7 @@ void main(void)
 
     vec2 spriteTexCoord = (v_texCoord - u_spritePosInSheet) / u_spriteSizeRelToSheet; // [0..1]
     vec2 pixelPos = spriteTexCoord * u_contentSize + u_spriteOffset; // [0..origSize]
-    vec3 curPixelPosInLocalSpace = (u_spriteRotated == 1) ? vec3(pixelPos.y, pixelPos.x, 0.0)                    // origin: bottom-left
+    vec3 curPixelPosInLocalSpace = (u_spriteRotated == 1) ? vec3(pixelPos.y, pixelPos.x, 0.0) // origin: bottom-left
                                                           : vec3(pixelPos.x, u_contentSize.y - pixelPos.y, 0.0);
     
 	vec3 lightVec = curPixelPosInLocalSpace - u_lightPos;

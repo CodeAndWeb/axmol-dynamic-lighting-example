@@ -54,7 +54,7 @@ private:
     ExampleGameState _gameState = ExampleGameState::init;
     
     ax::Vec3 _lightPos;
-    LightEffect *_effect;
+    LightEffect *_light;
     ax::Sprite *_lightSprite;
     float _screenW, _screenH;
 
